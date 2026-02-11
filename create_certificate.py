@@ -6,15 +6,14 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 
 def generate_self_signed_cert():
-    # 1. Genera la chiave privata
+    # to generate private key
     key = rsa.generate_private_key(
         public_exponent=65537,
         key_size=2048,
         
     )
 
-    # 2. Configura i dettagli del certificato (Subject e Issuer)
-    # Essendo auto-firmato, "Chi lo emette" (Issuer) e "A chi è intestato" (Subject) sono uguali.
+    # setup certificate subject and issuer 
     subject = x509.Name([
         x509.NameAttribute(NameOID.COUNTRY_NAME, u"IT"),
         x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, u"Italia"),
@@ -23,14 +22,13 @@ def generate_self_signed_cert():
         x509.NameAttribute(NameOID.COMMON_NAME, u"localhost"), # <--- FONDAMENTALE per il client
     ])
     
-    # Configura le estensioni (Subject Alternative Name - SAN)
-    # I browser e i client moderni guardano qui invece del Common Name
+   # configure subject alternative names (SAN) 
     alt_names = x509.SubjectAlternativeName([
         x509.DNSName(u"localhost"),
         x509.DNSName(u"127.0.0.1"),
     ])
 
-    # 3. Costruisci il certificato
+    # build certificate
     cert = (
         x509.CertificateBuilder()
         .subject_name(subject)
@@ -43,8 +41,8 @@ def generate_self_signed_cert():
         .sign(key, hashes.SHA256())
     )
 
-    # 4. Scrivi la chiave privata su file (key.pem)
-    password = b"password123"  # Password per proteggere la chiave privata
+    #  Save private key
+    password = b"password123"  # password to protect the private key 
     with open("key.pem", "wb") as f:
         f.write(key.private_bytes(
             encoding=serialization.Encoding.PEM,
@@ -52,7 +50,7 @@ def generate_self_signed_cert():
             encryption_algorithm=serialization.BestAvailableEncryption(password),
         ))
 
-    # 5. Scrivi il certificato pubblico su file (cert.pem)
+    # Save public certificate
     with open("cert.pem", "wb") as f:
         f.write(cert.public_bytes(serialization.Encoding.PEM))
 
